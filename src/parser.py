@@ -15,39 +15,71 @@ class Node:
 		tag = sde.attributes.get("tag")
 		stag = sde.attributes.get("sTag")
 		nodes = sde.attributes.get("nodes")
-		intext = sde.attributes.get("inText")
 
-		class_name = tech.attributes.get("className")
 		rtid = tech.attributes.get("RTID").value
+		class_name = tech.attributes.get("className").value
+		voltage = tech.attributes.get("voltage")
+		name = tech.attributes.get("DispName")
 
+		# handle Breakers state
+		closed = None
+		if class_name in ["Breaker", "GroundDisconnector", "Disconnector"]:
+			closed = 1
+			try:
+				closed = int(tech.attributes.get("closed").value)
+			except:
+				pass
+
+		# handle SubstationTP capacity
+		capacity = 0
+		for elem in sde.childNodes:
+			if elem.nodeName == "ParamText":
+				c = elem.attributes.get("subscriptName")
+				if c:
+					try:
+						capacity = int(c.value)
+					except:
+						pass
+
+		# connected nodes list
 		if not nodes:
 			nodes = []
 		else:
 			nodes = nodes.value.split(" ")
 
-		if not class_name:
-			class_name = "NONAME"
+		# voltage of node
+		if not voltage:
+			voltage = ''
 		else:
-			class_name = class_name.value
+			voltage = voltage.value
 
-		if not intext:
-			intext = ''
+		# displayed name
+		if not name:
+			name = ''
 		else:
-			intext = intext.value.replace('"', "'")
+			name = name.value.replace('"', "'")
 
 		self.rtid = rtid
 		self.tag = tag
 		self.stag = stag
 		self.class_name = class_name
 		self.nodes = nodes
-		self.intext = intext
+		self.voltage = voltage
+		self.name = name
+		self.capacity = capacity
+		self.closed = closed
 
 	def __str__(self):
-		return "{" + 'class: "{}", RTID: {}, nodes: {}, intext: "{}"'.format(
-			self.class_name, self.rtid, self.nodes, self.intext) + "}"
+		if self.closed is not None:
+			return "{" + 'class: "{}", RTID: {}, nodes: {}, voltage: "{}", name: "{}", capacity: {}, closed: {}'.format(
+					self.class_name, self.rtid, self.nodes, self.voltage, self.name, self.capacity, self.closed) + "}"
+		else:
+			return "{" + 'class: "{}", RTID: {}, nodes: {}, voltage: "{}", name: "{}", capacity: {}'.format(
+					self.class_name, self.rtid, self.nodes, self.voltage, self.name, self.capacity) + "}"
 
 	def __repr__(self):
-		return {'class': self.class_name, "RTID": self.rtid, "nodes": self.nodes}
+		return {"class": self.class_name, "RTID": self.rtid, "closed": self.closed,
+				"voltage": self.voltage, "nodes": self.nodes, "capacity": self.capacity}
 
 
 def print_tree_recursively(node, i=1):
@@ -88,15 +120,17 @@ def parse_xml():
 	itemlist = xmldoc.getElementsByTagName('SDE')
 
 	for sde in itemlist:
-		n = Node(sde)
-		key = int(n.rtid)
+		tech = sde.childNodes[1]
+		if tech.attributes.get("className"): # drop nodes without name
+			n = Node(sde)
+			key = int(n.rtid)
 
-		topology[key] = n
+			topology[key] = n
 
 
 def main():
 	# choosing some node just for debug
-	n = topology[4]
+	n = topology[113]
 	print_full_topology(n)
 
 

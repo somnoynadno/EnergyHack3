@@ -6,7 +6,7 @@ from neo4j import GraphDatabase
 from parser import topology
 
 
-URI = "neo4j://localhost:7687"
+URI = "neo4j://somnoynadno.ru:7687"
 CREDS = ("neo4j", "password")
 VERBOSE = True
 
