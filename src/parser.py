@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
-import xml.etree.ElementTree as ET
+import sys
+
 from xml.dom import minidom
 
+
+# source file
+FILE_PATH = 'static/distr_network.xsde'
 
 # nodes collection
 topology = dict()
@@ -82,6 +86,7 @@ class Node:
 				"voltage": self.voltage, "nodes": self.nodes, "capacity": self.capacity}
 
 
+# pretty print all childs of selected node
 def print_tree_recursively(node, i=1):
 	padding = "-"*i + ">"
 	print(padding, str(node))
@@ -94,6 +99,7 @@ def print_tree_recursively(node, i=1):
 				print(padding, rtid, 'no way')
 
 
+# get list of parents os selected node
 def reverse_lookup(node):
 	res = []
 	for v in topology.values():
@@ -104,6 +110,7 @@ def reverse_lookup(node):
 	return res
 
 
+# reverse lookup + print tree
 def print_full_topology(root):
 	print_tree_recursively(root)
 	rl = reverse_lookup(root)
@@ -113,10 +120,11 @@ def print_full_topology(root):
 			print_full_topology(elem)
 
 
+# building topology
 def parse_xml():
 	global topology
 
-	xmldoc = minidom.parse('static/distr_network.xsde')
+	xmldoc = minidom.parse(FILE_PATH)
 	itemlist = xmldoc.getElementsByTagName('SDE')
 
 	for sde in itemlist:
@@ -129,9 +137,13 @@ def parse_xml():
 
 
 def main():
-	# choosing some node just for debug
-	n = topology[113]
-	print_full_topology(n)
+	if len(sys.argv) <= 1:
+		print("You need to specify root node RTID")
+		exit(1)
+	else:
+		root = int(sys.argv[1])
+		n = topology[root]
+		print_full_topology(n)
 
 
 ###############################

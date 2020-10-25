@@ -11,10 +11,12 @@ CREDS = ("neo4j", "password")
 VERBOSE = True
 
 
+# create simple node
 def create_node(tx, node):
 	tx.run("CREATE (n{}:{} {})".format(node.rtid, node.class_name, str(node)))
 
 
+# connect two existing nodes
 def create_link(tx, node1, node2):
 	tx.run('MATCH (n{0}:{1}), (n{2}:{3}) WHERE n{0}.RTID = {0} AND n{2}.RTID = {2} CREATE (n{0})-[r:CONNECTED_TO]->(n{2})'.format(
 		node1.rtid, node1.class_name, node2.rtid, node2.class_name))
